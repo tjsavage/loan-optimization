@@ -18,7 +18,7 @@ alldata$Previous_Rate = NULL # Column Previous_Rate has missing values, a basic 
 trainingProcessed = alldata[1:nrow(training),]
 testProcessed = alldata[-(1:nrow(training)),]
 
-## Randomize the training data, and split it into a validation set and a new, smaller training set
+## Randomize the training data, and split it into different folds for cross-validation
 
 trainingProcessedRandomized = trainingProcessed[sample(nrow(trainingProcessed)),]
 
@@ -38,6 +38,8 @@ generateModel <- function(trainingSet) {
 
 # Do a 5-fold cross-validation on the model
 
+aucs <- rep(0, num_folds)
+
 for(i in 1:num_folds) {
   # Set up the current validation and training sets using the folds
   currValidationIndexes <- which(folds==i, arr.ind=TRUE)
@@ -47,8 +49,12 @@ for(i in 1:num_folds) {
   # Train the model
   currModel <- generateModel(currTrainingSet)
   currPredictions <- predict(currModel, newdata=currValidationSet)
-  cat(auc(currValidationSet$accepted, currPredictions) + "\n")
+  currAUC <- auc(currValidationSet$accepted, currPredictions)
+  
+  aucs[i] <- currAUC
 }
+
+cat(mean(aucs))
 
 
 #### Output predictions for the test set
